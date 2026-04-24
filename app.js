@@ -185,14 +185,16 @@ document.addEventListener('DOMContentLoaded', () => {
             input.name = `question-${question.id}`;
             input.value = letter;
             
+            const hasAnswered = progress.answers[index] !== null;
+
             // Check if already answered
             if (progress.answers[index] === letter) {
                 input.checked = true;
                 label.classList.add('selected');
             }
 
-            // Disable input if exam is submitted
-            if (progress.isSubmitted) {
+            // Disable input if already answered or exam is submitted
+            if (hasAnswered || progress.isSubmitted) {
                 input.disabled = true;
                 
                 // Show correct/incorrect states
@@ -204,8 +206,8 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 input.addEventListener('change', (e) => {
                     handleAnswerSelection(index, e.target.value);
-                    document.querySelectorAll('.option-label').forEach(lbl => lbl.classList.remove('selected'));
-                    label.classList.add('selected');
+                    // Re-render question to immediately show feedback and lock options
+                    renderQuestion(index);
                 });
             }
 
