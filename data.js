@@ -138,7 +138,7 @@ const examData = {
         // ELF - Bond
         { id: 31, type: 'ELF', textId: 'bond', text: 'Which word best fits gap 31?', options: ['A: austerity', 'B: durability', 'C: prosperity', 'D: liability'], correctAnswer: 'A' },
         { id: 32, type: 'ELF', textId: 'bond', text: 'Which word best fits gap 32?', options: ['A: strong', 'B: realistic', 'C: imaginary', 'D: complex'], correctAnswer: 'C' },
-        { id: 33, type: 'ELF', textId: 'bond', text: 'Which word best fits gap 33?', options: ['A: backward', 'B: adventurous', 'C: sophisticated', 'D: straightforward'], correctAnswer: 'A' },
+        { id: 33, type: 'ELF', textId: 'bond', text: 'Which word best fits gap 33?', options: ['A: backward', 'B: adventurous', 'C: sophisticated', 'D: straightforward'], correctAnswer: 'D' },
         { id: 34, type: 'ELF', textId: 'bond', text: 'Which word best fits gap 34?', options: ['A: Reluctantly', 'B: Historically', 'C: Occasionally', 'D: Consequently'], correctAnswer: 'B' },
         { id: 35, type: 'ELF', textId: 'bond', text: 'Which word best fits gap 35?', options: ['A: Sayings', 'B: Arguments', 'C: Rumours', 'D: Incidents'], correctAnswer: 'C' },
 
