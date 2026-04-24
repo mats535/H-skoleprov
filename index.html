@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Högskoleprovet - Provpass 4</title>
+    <title>Högskoleprovet - Övningsprov</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="app-container">
-        <header>
+        <header id="exam-header" style="display: none;">
             <h1 id="exam-title">Högskoleprovet</h1>
             <div class="progress-container">
                 <span class="progress-text">Fråga <span id="current-question-num">1</span> av <span id="total-questions-num">40</span></span>
@@ -18,7 +18,15 @@
             </div>
         </header>
 
-        <main>
+        <!-- Home / Overview Screen -->
+        <main id="home-screen" class="home-container">
+            <h1 style="text-align: center; margin-bottom: 2rem;">Välj Provpass</h1>
+            <div class="provpass-grid" id="provpass-grid">
+                <!-- Injected via JS -->
+            </div>
+        </main>
+
+        <main id="exam-screen" style="display: none;">
             <!-- Reading Comprehension Text Container (Left side on desktop) -->
             <section id="reading-container" class="card">
                 <h2 id="reading-title" style="margin-bottom: 0.5rem;"></h2>
@@ -61,12 +69,21 @@
             <h2>Ditt Resultat</h2>
             <div class="result-score" id="result-score">0 / 40</div>
             <p class="result-message" id="result-message">Bra jobbat! Vill du se vad du svarade på frågorna?</p>
-            <button id="btn-review" class="btn-primary" style="margin: 0 auto;">
-                Granska svaren
-            </button>
+            <div class="result-actions" style="display: flex; gap: 1rem; justify-content: center; margin-top: 1rem;">
+                <button id="btn-review" class="btn-primary">
+                    Granska svaren
+                </button>
+                <button id="btn-home" class="btn-secondary">
+                    Till översikten
+                </button>
+            </div>
         </div>
     </div>
 
+    <script src="data2.js"></script>
+    <script src="data3.js"></script>
+    <script src="data4.js"></script>
+    <script src="data5.js"></script>
     <script src="data.js"></script>
     <script src="app.js"></script>
 </body>

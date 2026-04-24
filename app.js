@@ -1,12 +1,27 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // State
-    let currentQuestionIndex = 0;
-    const totalQuestions = examData.questions.length;
-    let userAnswers = new Array(totalQuestions).fill(null);
-    let isSubmitted = false;
+    // Application State
+    const appState = {
+        currentExamId: null,
+        currentQuestionIndex: 0,
+        examProgress: {} // { examId: { answers: [], isSubmitted: false, score: 0 } }
+    };
+
+    // Initialize progress for each exam
+    examData.forEach(exam => {
+        appState.examProgress[exam.id] = {
+            answers: new Array(exam.questions.length).fill(null),
+            isSubmitted: false,
+            score: 0
+        };
+    });
 
     // DOM Elements
     const elements = {
+        homeScreen: document.getElementById('home-screen'),
+        provpassGrid: document.getElementById('provpass-grid'),
+        examScreen: document.getElementById('exam-screen'),
+        examHeader: document.getElementById('exam-header'),
+        
         title: document.getElementById('exam-title'),
         currentNum: document.getElementById('current-question-num'),
         totalNum: document.getElementById('total-questions-num'),
@@ -28,38 +43,102 @@ document.addEventListener('DOMContentLoaded', () => {
         
         resultScreen: document.getElementById('result-screen'),
         resultScore: document.getElementById('result-score'),
-        btnReview: document.getElementById('btn-review')
+        btnReview: document.getElementById('btn-review'),
+        btnHome: document.getElementById('btn-home')
     };
 
     // Initialization
     function init() {
-        elements.title.textContent = examData.title;
-        elements.totalNum.textContent = totalQuestions;
+        renderHomeScreen();
         
         // Event Listeners
         elements.btnPrev.addEventListener('click', navigatePrev);
         elements.btnNext.addEventListener('click', navigateNext);
         elements.btnSubmit.addEventListener('click', submitExam);
-        elements.btnReview.addEventListener('click', closeResultScreen);
-        
-        renderQuestion(currentQuestionIndex);
+        elements.btnReview.addEventListener('click', () => {
+            elements.resultScreen.classList.remove('active');
+            appState.currentQuestionIndex = 0;
+            renderQuestion(appState.currentQuestionIndex);
+        });
+        elements.btnHome.addEventListener('click', () => {
+            elements.resultScreen.classList.remove('active');
+            showHomeScreen();
+        });
     }
 
-    // Rendering
+    // --- Home Screen Logic ---
+    function renderHomeScreen() {
+        elements.provpassGrid.innerHTML = '';
+        examData.forEach(exam => {
+            const progress = appState.examProgress[exam.id];
+            const isCompleted = progress.isSubmitted;
+            
+            const card = document.createElement('div');
+            card.className = 'provpass-card fade-in';
+            card.onclick = () => startExam(exam.id);
+            
+            const badgeClass = isCompleted ? 'completed' : 'pending';
+            const badgeText = isCompleted ? `${progress.score} / ${exam.questions.length} Rätt` : 'Ej startad';
+            
+            card.innerHTML = `
+                <h2>${exam.title}</h2>
+                <p>Tid: ${exam.totalTimeInMinutes} minuter</p>
+                <span class="status-badge ${badgeClass}">${badgeText}</span>
+            `;
+            elements.provpassGrid.appendChild(card);
+        });
+    }
+
+    function showHomeScreen() {
+        elements.examScreen.style.display = 'none';
+        elements.examHeader.style.display = 'none';
+        elements.homeScreen.style.display = 'flex';
+        renderHomeScreen();
+    }
+
+    // --- Exam Logic ---
+    function startExam(examId) {
+        appState.currentExamId = examId;
+        appState.currentQuestionIndex = 0;
+        
+        elements.homeScreen.style.display = 'none';
+        elements.examScreen.style.display = 'flex';
+        elements.examHeader.style.display = 'flex';
+        
+        const exam = getActiveExam();
+        elements.title.textContent = exam.title;
+        elements.totalNum.textContent = exam.questions.length;
+        
+        renderQuestion(appState.currentQuestionIndex);
+    }
+
+    function getActiveExam() {
+        return examData.find(e => e.id === appState.currentExamId);
+    }
+
+    function getActiveProgress() {
+        return appState.examProgress[appState.currentExamId];
+    }
+
+    // Rendering Questions
     function renderQuestion(index) {
-        const question = examData.questions[index];
+        const exam = getActiveExam();
+        const progress = getActiveProgress();
+        const question = exam.questions[index];
+        const totalQs = exam.questions.length;
         
         // Update Progress
         elements.currentNum.textContent = index + 1;
-        const progressPercentage = ((index + 1) / totalQuestions) * 100;
+        const progressPercentage = ((index + 1) / totalQs) * 100;
         elements.progressBar.style.width = `${progressPercentage}%`;
 
-        // Update Reading Material
-        if (question.textId && examData.texts[question.textId]) {
-            const textData = examData.texts[question.textId];
+        // Update Reading Material (Handle both textId and textRef)
+        const textKey = question.textId || question.textRef;
+        if (textKey && exam.texts[textKey]) {
+            const textData = exam.texts[textKey];
             elements.readingTitle.textContent = textData.title;
             elements.readingAuthor.textContent = textData.author || '';
-            elements.readingContent.innerHTML = textData.content;
+            elements.readingContent.innerHTML = textData.content.replace(/\n/g, '<br>');
             elements.readingContainer.classList.add('active');
         } else {
             elements.readingContainer.classList.remove('active');
@@ -71,23 +150,27 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.questionFadeTarget.classList.add('fade-in');
 
         // Update Question
-        elements.questionCategory.textContent = question.type;
-        // Fix string interpolation bug in raw text where A: B: isn't handled correctly
-        elements.questionText.textContent = `${question.id}. ${question.text}`;
+        elements.questionCategory.textContent = question.category || question.type;
+        // Text is already formatted as "X. text" in most cases, but we can ensure it
+        let qText = question.text;
+        if (!qText.startsWith(`${question.id}.`)) {
+            qText = `${question.id}. ${qText}`;
+        }
+        elements.questionText.textContent = qText;
 
         // Update Options
         elements.optionsContainer.innerHTML = '';
         question.options.forEach((optionStr, optionIndex) => {
-            // Option string is like "A: something", extract letter and text
-            const splitIndex = optionStr.indexOf(':');
+            // Parse option string (e.g., "A: slutfasen" or "A besked")
+            const match = optionStr.match(/^([A-E])[:\s]+(.*)$/);
             let letter = '';
             let text = optionStr;
             
-            if (splitIndex !== -1) {
-                letter = optionStr.substring(0, splitIndex).trim();
-                text = optionStr.substring(splitIndex + 1).trim();
+            if (match) {
+                letter = match[1];
+                text = match[2];
             } else {
-                // Fallback for options without explicit letter
+                // Fallback
                 const letters = ['A', 'B', 'C', 'D', 'E'];
                 letter = letters[optionIndex];
             }
@@ -103,26 +186,24 @@ document.addEventListener('DOMContentLoaded', () => {
             input.value = letter;
             
             // Check if already answered
-            if (userAnswers[index] === letter) {
+            if (progress.answers[index] === letter) {
                 input.checked = true;
                 label.classList.add('selected');
             }
 
             // Disable input if exam is submitted
-            if (isSubmitted) {
+            if (progress.isSubmitted) {
                 input.disabled = true;
                 
                 // Show correct/incorrect states
                 if (letter === question.correctAnswer) {
                     label.classList.add('correct');
-                } else if (userAnswers[index] === letter && letter !== question.correctAnswer) {
+                } else if (progress.answers[index] === letter && letter !== question.correctAnswer) {
                     label.classList.add('incorrect');
                 }
             } else {
                 input.addEventListener('change', (e) => {
                     handleAnswerSelection(index, e.target.value);
-                    
-                    // Update visual styling of selected option
                     document.querySelectorAll('.option-label').forEach(lbl => lbl.classList.remove('selected'));
                     label.classList.add('selected');
                 });
@@ -145,9 +226,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update Navigation Buttons
         elements.btnPrev.disabled = index === 0;
         
-        if (index === totalQuestions - 1) {
+        if (index === totalQs - 1) {
             elements.btnNext.style.display = 'none';
-            if (!isSubmitted) {
+            if (!progress.isSubmitted) {
                 elements.btnSubmit.style.display = 'flex';
             } else {
                 elements.btnSubmit.style.display = 'none';
@@ -160,47 +241,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Event Handlers
     function handleAnswerSelection(index, selectedLetter) {
-        userAnswers[index] = selectedLetter;
+        const progress = getActiveProgress();
+        progress.answers[index] = selectedLetter;
     }
 
     function navigateNext() {
-        if (currentQuestionIndex < totalQuestions - 1) {
-            currentQuestionIndex++;
-            renderQuestion(currentQuestionIndex);
+        const exam = getActiveExam();
+        if (appState.currentQuestionIndex < exam.questions.length - 1) {
+            appState.currentQuestionIndex++;
+            renderQuestion(appState.currentQuestionIndex);
         }
     }
 
     function navigatePrev() {
-        if (currentQuestionIndex > 0) {
-            currentQuestionIndex--;
-            renderQuestion(currentQuestionIndex);
+        if (appState.currentQuestionIndex > 0) {
+            appState.currentQuestionIndex--;
+            renderQuestion(appState.currentQuestionIndex);
         }
     }
 
     function submitExam() {
+        const exam = getActiveExam();
+        const progress = getActiveProgress();
+        
         // Calculate Score
         let correctCount = 0;
-        userAnswers.forEach((answer, index) => {
-            if (answer === examData.questions[index].correctAnswer) {
+        progress.answers.forEach((answer, index) => {
+            if (answer === exam.questions[index].correctAnswer) {
                 correctCount++;
             }
         });
 
-        isSubmitted = true;
+        progress.isSubmitted = true;
+        progress.score = correctCount;
         
         // Show Result Screen
-        elements.resultScore.textContent = `${correctCount} / ${totalQuestions}`;
+        elements.resultScore.textContent = `${correctCount} / ${exam.questions.length}`;
         elements.resultScreen.classList.add('active');
         
         // Render the current question again to show correct/incorrect styling
-        renderQuestion(currentQuestionIndex);
-    }
-
-    function closeResultScreen() {
-        elements.resultScreen.classList.remove('active');
-        // Go back to the first question so user can review
-        currentQuestionIndex = 0;
-        renderQuestion(currentQuestionIndex);
+        renderQuestion(appState.currentQuestionIndex);
     }
 
     // Start App
