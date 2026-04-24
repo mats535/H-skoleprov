@@ -1,1 +1,73 @@
-<h1>Högskoleprovet</h1>
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Högskoleprovet - Provpass 4</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1 id="exam-title">Högskoleprovet</h1>
+            <div class="progress-container">
+                <span class="progress-text">Fråga <span id="current-question-num">1</span> av <span id="total-questions-num">40</span></span>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="progress-bar"></div>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <!-- Reading Comprehension Text Container (Left side on desktop) -->
+            <section id="reading-container" class="card">
+                <h2 id="reading-title" style="margin-bottom: 0.5rem;"></h2>
+                <h3 id="reading-author" style="color: var(--text-muted); font-size: 1rem; font-weight: 500; margin-bottom: 1.5rem;"></h3>
+                <div id="reading-content" style="font-size: 1.1rem;"></div>
+            </section>
+
+            <!-- Question and Options Container -->
+            <section id="question-container" class="card">
+                <div class="question-header fade-in" id="question-fade-target">
+                    <span class="question-type" id="question-category">ORD</span>
+                    <h2 class="question-text" id="question-text">Fråga laddas...</h2>
+                </div>
+                
+                <div class="options-list" id="options-container">
+                    <!-- Options injected via JS -->
+                </div>
+                
+                <footer>
+                    <button id="btn-prev" class="btn-secondary" disabled>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                        Föregående
+                    </button>
+                    <button id="btn-next" class="btn-primary">
+                        Nästa
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                    </button>
+                    <button id="btn-submit" class="btn-success">
+                        Lämna in
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5l10 -10"/></svg>
+                    </button>
+                </footer>
+            </section>
+        </main>
+    </div>
+
+    <!-- Result Screen Overlay -->
+    <div class="result-screen" id="result-screen">
+        <div class="result-card">
+            <h2>Ditt Resultat</h2>
+            <div class="result-score" id="result-score">0 / 40</div>
+            <p class="result-message" id="result-message">Bra jobbat! Vill du se vad du svarade på frågorna?</p>
+            <button id="btn-review" class="btn-primary" style="margin: 0 auto;">
+                Granska svaren
+            </button>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
